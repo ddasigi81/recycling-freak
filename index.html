@@ -1,14 +1,53 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hello World</title>
-  <link href='/style.css' rel='stylesheet'>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>의류수거함 찾기</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Hello, world!</h1>
-  <button onclick="console.log('hello');">Press me</button>
-  <script defer type="text/javascript" src="/main.js"></script>
+  <main class="app-layout">
+    <section class="search-panel" aria-labelledby="page-title">
+      <div class="search-content">
+        <h1 id="page-title">의류수거함 찾기</h1>
+        <p>주소 유형을 선택하고 주소를 입력해 가까운 의류수거함을 찾아보세요.</p>
+
+        <form id="search-form" action="/search" method="get">
+          <fieldset>
+            <legend>주소 유형</legend>
+            <label class="radio-option" for="address-type-road">
+              <input type="radio" name="addressType" id="address-type-road" value="road" checked>
+              도로명
+            </label>
+            <label class="radio-option" for="address-type-jibun">
+              <input type="radio" name="addressType" id="address-type-jibun" value="jibun">
+              지번
+            </label>
+          </fieldset>
+
+          <div>
+            <label for="address">주소</label>
+            <input
+              type="text"
+              name="address"
+              id="address"
+              placeholder="예: 용마산로 or 면목동"
+              autocomplete="street-address"
+              required
+            >
+          </div>
+
+          <button type="submit">검색</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="map-panel" aria-label="지도 영역">
+      <div id="map" class="map-placeholder">
+        지도 표시 영역
+      </div>
+    </section>
+  </main>
 </body>
 </html>

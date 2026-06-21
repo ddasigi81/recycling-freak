@@ -1,1 +1,147 @@
-/* Add styles here */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: Arial, "Noto Sans KR", sans-serif;
+  color: #1f2937;
+  background: #f3f4f6;
+}
+
+.app-layout {
+  display: grid;
+  grid-template-columns: minmax(360px, 42%) minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.search-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  border-right: 1px solid #d1d5db;
+  background: #ffffff;
+}
+
+.search-content {
+  width: min(100%, 520px);
+}
+
+h1 {
+  margin: 0 0 12px;
+  font-size: 36px;
+  line-height: 1.2;
+  color: #111827;
+}
+
+p {
+  margin: 0 0 32px;
+  color: #4b5563;
+  line-height: 1.6;
+}
+
+form {
+  display: grid;
+  gap: 20px;
+}
+
+fieldset {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+legend,
+label[for="address"] {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.radio-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.radio-option:has(input:checked) {
+  border-color: #0f766e;
+  background: #ecfdf5;
+  color: #0f766e;
+  font-weight: 700;
+}
+
+input[type="text"] {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 16px;
+}
+
+input[type="text"]:focus {
+  border-color: #0f766e;
+  outline: 3px solid rgba(15, 118, 110, 0.18);
+}
+
+button {
+  min-height: 48px;
+  border: 0;
+  border-radius: 8px;
+  background: #0f766e;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #115e59;
+}
+
+.map-panel {
+  min-width: 0;
+  min-height: 100vh;
+  background: #e5e7eb;
+}
+
+.map-placeholder {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  min-height: 100vh;
+  place-items: center;
+  color: #6b7280;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+@media (max-width: 760px) {
+  .app-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .search-panel {
+    padding: 36px 20px;
+    border-right: 0;
+    border-bottom: 1px solid #d1d5db;
+  }
+
+  .map-panel,
+  .map-placeholder {
+    min-height: 420px;
+  }
+}
