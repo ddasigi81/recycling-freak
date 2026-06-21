@@ -1,0 +1,216 @@
+openapi: 3.0.3
+info:
+  title: 브이월드 검색 API (VWorld Search API v2.0)
+  description: |
+    국가공간정보 오픈플랫폼(브이월드)에서 제공하는 검색 API 2.0 서비스입니다.
+    명칭, 주소(도로명/지번), 행정구역 명칭 등을 검색하여 공간정보 및 속성 데이터를 받아올 수 있습니다.
+    
+    *참고: 본 API를 사용하려면 브이월드 개발자센터에서 API Key(인증키) 발급과 사용 도메인 등록이 필요합니다.*
+  version: 2.0.0
+servers:
+  - url: https://api.vworld.kr/req
+    description: 브이월드 API 요청 운영 서버
+paths:
+  /search:
+    get:
+      summary: 공간정보 및 주소 통합 검색
+      description: 주소, 명칭, 행정구역 등의 키워드로 전국 공간 데이터를 검색합니다.
+      operationId: searchFeatures
+      parameters:
+        - name: key
+          in: query
+          description: 브이월드 오픈API 인증키
+          required: true
+          schema:
+            type: string
+            example: "YOUR_API_KEY_HERE"
+        - name: service
+          in: query
+          description: 서비스 명칭 (고정값 `search`)
+          required: true
+          schema:
+            type: string
+            default: search
+        - name: version
+          in: query
+          description: 서비스 버전 (고정값 `2.0`)
+          required: true
+          schema:
+            type: string
+            default: "2.0"
+        - name: request
+          in: query
+          description: 요청 서비스 기능 (고정값 `search`)
+          required: true
+          schema:
+            type: string
+            default: search
+        - name: query
+          in: query
+          description: 검색할 키워드 (텍스트 명칭 혹은 주소)
+          required: true
+          schema:
+            type: string
+            example: "역삼동"
+        - name: type
+          in: query
+          description: |
+            검색 대상 타입 선택
+            * `PLACE` - 명칭검색 (POI)
+            * `ADDRESS` - 주소검색 (지번/도로명 통합)
+            * `DISTRICT` - 행정구역검색 (시도/시군구/읍면동/리)
+            * `ROAD` - 도로명
+          required: true
+          schema:
+            type: string
+            enum: [PLACE, ADDRESS, DISTRICT, ROAD]
+            example: DISTRICT
+        - name: category
+          in: query
+          description: |
+            행정구역(DISTRICT) 검색 시 세부 분류 필터링
+            * `L1` - 시도
+            * `L2` - 시군구
+            * `L3` - 읍면동
+            * `L4` - 리
+          required: false
+          schema:
+            type: string
+            enum: [L1, L2, L3, L4]
+            example: L3
+        - name: format
+          in: query
+          description: 응답 결과 포맷
+          required: false
+          schema:
+            type: string
+            enum: [json, xml]
+            default: json
+        - name: size
+          in: query
+          description: 한 페이지에 출력할 결과 수 (1~1000)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 10
+        - name: page
+          in: query
+          description: 조회할 결과 페이지 번호
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: crs
+          in: query
+          description: 반환받을 공간 좌표계 (기본값 EPSG:4326 - WGS84 위경도)
+          required: false
+          schema:
+            type: string
+            default: "EPSG:4326"
+            example: "EPSG:4326"
+      responses:
+        '200':
+          description: 검색 성공 응답
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResponse'
+components:
+  schemas:
+    SearchResponse:
+      type: object
+      properties:
+        response:
+          type: object
+          properties:
+            service:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "search"
+                version:
+                  type: string
+                  example: "2.0"
+                operation:
+                  type: string
+                  example: "search"
+                time:
+                  type: string
+                  example: "12ms"
+            status:
+              type: string
+              description: 처리 상태 (OK 또는 ERROR)
+              example: "OK"
+            record:
+              type: object
+              properties:
+                total:
+                  type: string
+                  description: 총 검색 결과 수
+                  example: "1"
+                current:
+                  type: string
+                  description: 현재 페이지의 결과 수
+                  example: "1"
+            page:
+              type: object
+              properties:
+                total:
+                  type: string
+                  description: 총 페이지 수
+                  example: "1"
+                current:
+                  type: string
+                  description: 현재 페이지 번호
+                  example: "1"
+            result:
+              type: object
+              properties:
+                crs:
+                  type: string
+                  example: "EPSG:4326"
+                items:
+                  type: array
+                  description: 검색 결과 리스트
+                  items:
+                    $ref: '#/components/schemas/SearchItem'
+    SearchItem:
+      type: object
+      properties:
+        id:
+          type: string
+          description: 고유 식별자 코드 (예: 행정구역코드 등)
+          example: "1168010100"
+        title:
+          type: string
+          description: 검색된 명칭 / 주소 이름
+          example: "서울특별시 강남구 역삼동"
+        point:
+          type: object
+          description: 검색된 위치의 중심 좌표 (crs 기준)
+          properties:
+            x:
+              type: string
+              description: 경도 (X축 좌표)
+              example: "127.0329124"
+            y:
+              type: string
+              description: 위도 (Y축 좌표)
+              example: "37.4958611"
+        address:
+          type: object
+          description: 행정구역 및 주소 상세 정보
+          properties:
+            bnode:
+              type: string
+              example: ""
+            road:
+              type: string
+              example: ""
+            parcel:
+              type: string
+              example: "역삼동"

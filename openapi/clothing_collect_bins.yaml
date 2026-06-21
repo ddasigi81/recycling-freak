@@ -1,0 +1,218 @@
+openapi: 3.0.3
+info:
+  title: 공공 의류 수거함 데이터 오픈 API
+  description: 전국 공공 의류 수거함의 위치, 관리기관, 주소 등의 정보를 조회하는 API입니다. (활용승인 자동승인)
+  version: 1.0.0
+servers:
+  - url: https://api.data.go.kr/openapi
+paths:
+  /tn_pubr_public_clothing_collect_bins_api:
+    get:
+      summary: 의류 수거함 위치 정보 조회
+      description: 제안된 조건에 따라 의류 수거함 데이터를 조회합니다. JSON과 XML 포맷을 모두 지원합니다.
+      parameters:
+        - name: serviceKey
+          in: query
+          description: 공공데이터포털에서 발급받은 인증키
+          required: true
+          schema:
+            type: string
+        - name: pageNo
+          in: query
+          description: 페이지 번호
+          required: false
+          schema:
+            type: integer
+            default: 0
+        - name: numOfRows
+          in: query
+          description: 한 페이지 결과 수 (최대 1000개)
+          required: false
+          schema:
+            type: integer
+            default: 100
+            maximum: 1000
+        - name: type
+          in: query
+          description: 응답 결과 포맷 (xml 또는 json)
+          required: false
+          schema:
+            type: string
+            enum: [xml, json]
+            default: xml
+        - name: MNG_NO
+          in: query
+          description: 관리번호
+          required: false
+          schema:
+            type: string
+        - name: INSTL_PLC_NM
+          in: query
+          description: 설치장소명
+          required: false
+          schema:
+            type: string
+        - name: CTPV_NM
+          in: query
+          description: 시도명
+          required: false
+          schema:
+            type: string
+        - name: SGG_NM
+          in: query
+          description: 시군구명
+          required: false
+          schema:
+            type: string
+        - name: LCTN_ROAD_NM_ADDR
+          in: query
+          description: 소재지도로명주소
+          required: false
+          schema:
+            type: string
+        - name: LCTN_LOTNO_ADDR
+          in: query
+          description: 소재지지번주소
+          required: false
+          schema:
+            type: string
+        - name: LAT
+          in: query
+          description: 위도
+          required: false
+          schema:
+            type: string
+        - name: LOT
+          in: query
+          description: 경도
+          required: false
+          schema:
+            type: string
+        - name: DTL_PSTN
+          in: query
+          description: 상세위치
+          required: false
+          schema:
+            type: string
+        - name: MNG_INST_NM
+          in: query
+          description: 관리기관명
+          required: false
+          schema:
+            type: string
+        - name: MNG_INST_TELNO
+          in: query
+          description: 관리기관전화번호
+          required: false
+          schema:
+            type: string
+        - name: DATA_CRTR_YMD
+          in: query
+          description: 데이터기준일자 (YYYY-MM-DD)
+          required: false
+          schema:
+            type: string
+        - name: instt_code
+          in: query
+          description: 제공기관코드
+          required: false
+          schema:
+            type: string
+        - name: instt_nm
+          in: query
+          description: 제공기관기관명
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 정상 응답 (오픈API 비즈니스 결과 포함)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+components:
+  schemas:
+    ApiResponse:
+      type: object
+      properties:
+        response:
+          type: object
+          properties:
+            header:
+              type: object
+              properties:
+                resultCode:
+                  type: string
+                  description: 결과코드 (00: 정상, 01~99: 에러코드 참조)
+                  example: "00"
+                resultMsg:
+                  type: string
+                  description: 결과메시지
+                  example: "NORMAL_CODE"
+            body:
+              type: object
+              properties:
+                items:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ClothingBinItem'
+                numOfRows:
+                  type: integer
+                  example: 100
+                pageNo:
+                  type: integer
+                  example: 0
+                totalCount:
+                  type: integer
+                  example: 1234
+
+    ClothingBinItem:
+      type: object
+      properties:
+        MNG_NO:
+          type: string
+          description: 관리번호
+        INSTL_PLC_NM:
+          type: string
+          description: 설치장소명
+        CTPV_NM:
+          type: string
+          description: 시도명
+        SGG_NM:
+          type: string
+          description: 시군구명
+        LCTN_ROAD_NM_ADDR:
+          type: string
+          description: 소재지도로명주소
+        LCTN_LOTNO_ADDR:
+          type: string
+          description: 소재지지번주소
+        LAT:
+          type: string
+          description: 위도
+        LOT:
+          type: string
+          description: 경도
+        DTL_PSTN:
+          type: string
+          description: 상세위치
+        MNG_INST_NM:
+          type: string
+          description: 관리기관명
+        MNG_INST_TELNO:
+          type: string
+          description: 관리기관전화번호
+        DATA_CRTR_YMD:
+          type: string
+          description: 데이터기준일자
+        instt_code:
+          type: string
+          description: 제공기관코드
+        instt_nm:
+          type: string
+          description: 제공기관기관명
