@@ -63,18 +63,39 @@ body{
 .results-grid .result-grid-heading{ font-weight:800; background:#f6faf7; padding:8px 12px; border-radius:10px; }
 .result-grid-cell{ padding:12px; background:#f8faf8; border-radius:10px; border:1px solid #eef6ef; }
 
-/* modal (popup) styles matching sample/popup_ex.png */
+/* modal (popup) — two column matching popup_ex.png */
 .vmodal-overlay{ position:fixed; inset:0; pointer-events:auto; z-index:9998; }
-.vmodal{ position:fixed; top:28px; left:18px; width:420px; max-width:calc(100% - 36px); background:var(--card); border-radius:12px; padding:14px; box-shadow:0 12px 30px rgba(15,118,110,0.12); border:1px solid rgba(15,118,110,0.06); backdrop-filter: blur(4px); }
+.vmodal{ position:fixed; top:28px; left:50%; transform:translateX(-50%); width:880px; max-width:calc(100% - 36px); background:var(--card); border-radius:14px; padding:14px; box-shadow:0 18px 40px rgba(15,118,110,0.12); border:1px solid rgba(15,118,110,0.06); }
+.vmodal.vmodal-wide{ display:flex; flex-direction:column; gap:8px; }
 .vmodal-header{ display:flex; align-items:center; justify-content:space-between; }
-.vmodal-title{ font-weight:800; color:#133d2e; }
-.vmodal-close{ background:transparent; border:0; font-size:20px; line-height:1; cursor:pointer; color:#374151; }
-.vmodal-hint{ margin-top:8px; color:#475057; font-size:13px; }
-.vmodal-list{ margin-top:12px; display:flex; flex-direction:column; gap:10px; }
-.vmodal-item{ display:flex; align-items:center; gap:12px; padding:12px; border-radius:10px; border:2px solid rgba(15,118,110,0.12); background:linear-gradient(180deg,#fff,#fbfff9); cursor:pointer; text-align:left; }
-.vmodal-item-left{ width:36px; height:36px; display:flex; align-items:center; justify-content:center; border-radius:8px; background:#f0fff4; color:var(--accent-600); }
+.vmodal-title-wrap{ display:flex; align-items:center; gap:12px; }
+.vmodal-title-icon{ width:44px; height:44px; border-radius:10px; display:flex; align-items:center; justify-content:center; background:linear-gradient(180deg,#e6faf0,#ccf6df); font-size:18px; }
+.vmodal-title{ font-weight:900; color:var(--accent-600); font-size:18px; }
+.vmodal-close{ background:transparent; border:0; font-size:22px; line-height:1; cursor:pointer; color:#6b7280; }
+.vmodal-sub{ color:#475057; font-size:13px; }
+
+.vmodal-grid{ display:grid; grid-template-columns: 1fr 420px; gap:14px; align-items:start; margin-top:8px; }
+.vmodal-left{ max-height:320px; overflow:auto; }
+.vmodal-right{ position:relative; }
+.vmodal-map-preview{ width:100%; height:320px; border-radius:10px; background:linear-gradient(180deg,#f6faf7,#eef7ee); display:flex; align-items:center; justify-content:center; color:var(--muted); font-weight:700; }
+.vmodal-marker-card{ position:absolute; right:14px; top:60px; background:#fff; padding:10px 12px; border-radius:10px; box-shadow:0 10px 26px rgba(9,58,40,0.08); border:1px solid rgba(15,118,110,0.06); display:flex; gap:8px; align-items:center; }
+.vmodal-marker-card .mc-num{ width:36px; height:36px; border-radius:8px; background:linear-gradient(180deg,#e9fff1,#d6ffdf); display:flex; align-items:center; justify-content:center; color:var(--accent-600); font-weight:800; }
+.vmodal-marker-card .mc-text{ font-weight:800; color:#0b4b38; font-size:13px; }
+.vmodal-marker-card .mc-sub{ display:block; font-weight:500; color:#447062; font-size:12px; }
+
+.vmodal-list{ display:flex; flex-direction:column; gap:8px; }
+.vmodal-item-row{ display:flex; align-items:center; gap:12px; padding:10px; border-radius:10px; border:1px solid #eef6ef; background:#fff; cursor:pointer; text-align:left; }
+.vmodal-item-row:hover{ background:#fbfff9; box-shadow:0 8px 20px rgba(15,118,110,0.06); transform:translateY(-2px); }
+.vmodal-num{ width:44px; height:44px; border-radius:10px; background:#f0fff4; display:flex; align-items:center; justify-content:center; color:var(--accent-600); font-weight:800; }
+.vmodal-meta{ display:flex; flex-direction:column; }
 .vmodal-item-name{ font-weight:800; color:#0b4b38; }
 .vmodal-item-sub{ color:#4b6b63; font-size:13px; }
+
+.vmodal-footer{ margin-top:8px; padding-top:6px; border-top:1px dashed #e6f3ea; }
+.vmodal-footer-info{ color:#475057; font-size:13px; }
+
+/* small screen adjustments */
+@media (max-width:920px){ .vmodal{ width:calc(100% - 28px); left:14px; transform:none; } .vmodal-grid{ grid-template-columns: 1fr; } .vmodal-right{ order:2; } }
 
 /* map */
 .map-container{ width:100%; height:420px; border-radius:10px; overflow:hidden; background:linear-gradient(180deg,#ffffff,#f2f7f3); display:flex; align-items:center; justify-content:center; color:var(--muted); font-weight:700; }

@@ -9,45 +9,70 @@
   }
 
   function createModal(items, onSelect, query){
-    // lightweight top-left floating card like sample/popup_ex.png
+    // two-column modal: left = selectable list (scrollable), right = small map preview
     const overlay = document.createElement('div');
     overlay.className = 'vmodal-overlay';
 
     const modal = document.createElement('div');
-    modal.className = 'vmodal';
+    modal.className = 'vmodal vmodal-wide';
     modal.setAttribute('role','dialog');
     modal.setAttribute('aria-label','행정구역 선택');
 
+    // header
     const header = document.createElement('div'); header.className = 'vmodal-header';
-    const title = document.createElement('div'); title.className = 'vmodal-title'; title.textContent = '행정구역 선택';
-    const closeBtn = document.createElement('button'); closeBtn.className = 'vmodal-close'; closeBtn.innerHTML = '&times;';
+    const titleWrap = document.createElement('div'); titleWrap.className='vmodal-title-wrap';
+    const icon = document.createElement('div'); icon.className='vmodal-title-icon'; icon.textContent='♻️';
+    const title = document.createElement('div'); title.className = 'vmodal-title'; title.textContent = '검색 결과';
+    titleWrap.appendChild(icon); titleWrap.appendChild(title);
+    const closeBtn = document.createElement('button'); closeBtn.className = 'vmodal-close'; closeBtn.setAttribute('aria-label','닫기'); closeBtn.innerHTML = '&times;';
     closeBtn.onclick = () => document.body.removeChild(overlay);
-    header.appendChild(title); header.appendChild(closeBtn);
+    header.appendChild(titleWrap); header.appendChild(closeBtn);
 
-    const hint = document.createElement('div'); hint.className = 'vmodal-hint'; hint.textContent = `"${query||''}" 검색 결과입니다. 정확한 지역을 선택해 주세요.`;
+    const subtitle = document.createElement('div'); subtitle.className='vmodal-sub'; subtitle.textContent = `"${query||''}" 검색 결과 — 정확한 지역을 선택하세요.`;
 
+    const bodyGrid = document.createElement('div'); bodyGrid.className='vmodal-grid';
+
+    const leftCol = document.createElement('div'); leftCol.className='vmodal-left';
     const list = document.createElement('div'); list.className = 'vmodal-list';
 
-    items.forEach(it => {
+    items.forEach((it, idx) => {
       const itemBtn = document.createElement('button');
-      itemBtn.className = 'vmodal-item';
+      itemBtn.className = 'vmodal-item-row';
 
-      const left = document.createElement('div'); left.className = 'vmodal-item-left'; left.innerHTML = '📍';
-      const right = document.createElement('div'); right.className = 'vmodal-item-right';
-      const name = document.createElement('div'); name.className = 'vmodal-item-name'; name.textContent = it.title || (it.address && (it.address.parcel || it.address.road)) || '';
-      const sub = document.createElement('div'); sub.className = 'vmodal-item-sub';
-      sub.textContent = (it.address && (it.address.road || it.address.parcel)) || '';
+      const num = document.createElement('div'); num.className='vmodal-num'; num.textContent = (idx+1);
+      const meta = document.createElement('div'); meta.className='vmodal-meta';
+      const name = document.createElement('div'); name.className='vmodal-item-name'; name.textContent = it.title || (it.address && (it.address.parcel || it.address.road)) || '';
+      const sub = document.createElement('div'); sub.className='vmodal-item-sub'; sub.textContent = (it.address && (it.address.road || it.address.parcel)) || '';
+      meta.appendChild(name); meta.appendChild(sub);
 
-      right.appendChild(name); right.appendChild(sub);
-      itemBtn.appendChild(left); itemBtn.appendChild(right);
+      itemBtn.appendChild(num); itemBtn.appendChild(meta);
 
-      itemBtn.onclick = () => { document.body.removeChild(overlay); onSelect(it); };
+      // on click, call onSelect with item
+      itemBtn.onclick = (e) => { e.preventDefault(); document.body.removeChild(overlay); onSelect(it); };
+
       list.appendChild(itemBtn);
     });
 
+    leftCol.appendChild(list);
+
+    const rightCol = document.createElement('div'); rightCol.className='vmodal-right';
+    const mapPreview = document.createElement('div'); mapPreview.className='vmodal-map-preview'; mapPreview.textContent='지도 미리보기';
+    // small floating card to emulate marker info
+    const markerCard = document.createElement('div'); markerCard.className='vmodal-marker-card'; markerCard.innerHTML = `<div class="mc-num">1</div><div class="mc-text">선택 항목 미리보기<br><span class="mc-sub">중소형 가전 근처</span></div>`;
+    rightCol.appendChild(mapPreview); rightCol.appendChild(markerCard);
+
+    bodyGrid.appendChild(leftCol); bodyGrid.appendChild(rightCol);
+
+    // footer with guidance
+    const footer = document.createElement('div'); footer.className='vmodal-footer';
+    const info = document.createElement('div'); info.className='vmodal-footer-info'; info.textContent='목록에서 항목을 선택하면 해당 위치의 의류수거함을 조회합니다.';
+    footer.appendChild(info);
+
     modal.appendChild(header);
-    modal.appendChild(hint);
-    modal.appendChild(list);
+    modal.appendChild(subtitle);
+    modal.appendChild(bodyGrid);
+    modal.appendChild(footer);
+
     overlay.appendChild(modal);
     document.body.appendChild(overlay);
   }
