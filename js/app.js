@@ -82,7 +82,7 @@ async function doRegionSearch() {
       setRegionDialogLoading(true);
       // build vworld params
       const vtype = State.searchMode === "road" ? "ROAD" : "DISTRICT";
-      const resp = await window.vworldClient.searchFeatures({ query: keyword, type: vtype, size: 100 });
+      const resp = await window.vworldClient.searchFeatures({ query: keyword, type: vtype, size: 100, category: vtype === 'DISTRICT' ? 'L4' : undefined });
       const items = (resp && resp.items) || [];
       setRegionDialogLoading(false);
       if (!items.length) {
