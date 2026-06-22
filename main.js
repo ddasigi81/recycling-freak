@@ -193,7 +193,8 @@
     const q = (addressInput.value || '').trim();
     if(!q) return;
 
-    const addrType = document.querySelector('input[name="addressType"]:checked').value;
+    // addressType comes from a select now
+    const addrType = (document.querySelector('select[name="addressType"]') || {}).value || 'road';
     // Use ROAD for road names, DISTRICT for 지번 (읍/면/동) searches
     const vtype = addrType === 'road' ? 'ROAD' : 'DISTRICT';
     const params = { query: q, type: vtype, size: 100, page: 1, format: 'json' };

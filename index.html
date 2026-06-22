@@ -8,47 +8,55 @@
 </head>
 <body>
   <main class="app-layout">
-    <section class="search-panel" aria-labelledby="page-title">
-      <div class="search-content">
-        <h1 id="page-title">의류수거함 찾기</h1>
-        <p>주소 유형을 선택하고 주소를 입력해 가까운 의류수거함을 찾아보세요.</p>
+    <header class="hero" role="banner">
+      <div class="hero-inner">
+        <div class="brand-row">
+          <div class="logo">♻️</div>
+          <h1 class="brand">분리수거에 진심</h1>
+        </div>
 
-        <form id="search-form" action="/search" method="get">
-          <fieldset>
-            <legend>주소 유형</legend>
-            <label class="radio-option" for="address-type-road">
-              <input type="radio" name="addressType" id="address-type-road" value="road" checked>
-              도로명
-            </label>
-            <label class="radio-option" for="address-type-jibun">
-              <input type="radio" name="addressType" id="address-type-jibun" value="jibun">
-              지번
-            </label>
-          </fieldset>
+        <div class="category-row" role="navigation" aria-label="카테고리">
+          <button class="cat active">중소형 폐가전수거함</button>
+          <button class="cat">폐의약품 수거함</button>
+          <button class="cat">의류수거함</button>
+          <button class="cat">폐형광등/폐건전지</button>
+          <button class="cat">대형폐기물 수수료 정보</button>
+          <button class="cat">생활쓰레기 배출 정보</button>
+        </div>
 
-          <div>
-            <label for="address">주소</label>
+        <form id="search-form" class="search-bar" action="/search" method="get">
+          <div class="search-controls">
+            <div class="select-type">
+              <select name="addressType" aria-label="주소 유형">
+                <option value="road">도로명</option>
+                <option value="jibun">지번(읍면동)</option>
+              </select>
+            </div>
+
             <input
-              type="text"
-              name="address"
               id="address"
-              placeholder="예: 용마산로 or 면목동"
+              name="address"
+              type="text"
+              placeholder="예) 환경로, 에코동..."
               autocomplete="street-address"
               required
             >
+
+            <button type="submit" class="search-btn">주소 검색</button>
           </div>
-
-          <button type="submit">검색</button>
         </form>
+      </div>
+    </header>
 
+    <section class="content">
+      <aside class="list-card">
+        <h2>📍 수거함 위치 목록</h2>
         <div id="results" class="results-section" aria-live="polite"></div>
-      </div>
-    </section>
+      </aside>
 
-    <section class="map-panel" aria-label="지도 영역">
-      <div id="map" class="map-placeholder">
-        지도 표시 영역
-      </div>
+      <section class="map-card" aria-label="지도">
+        <div id="map" class="map-container">지도 표시 영역</div>
+      </section>
     </section>
   </main>
 
