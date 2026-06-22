@@ -8,87 +8,47 @@
     resultsEl.innerHTML = `<div class="search-status" data-tone="${tone||''}">${message}</div>`;
   }
 
-  function createModal(items, onSelect){
+  function createModal(items, onSelect, query){
+    // lightweight top-left floating card like sample/popup_ex.png
     const overlay = document.createElement('div');
-    overlay.style.position = 'fixed';
-    overlay.style.inset = '0';
-    overlay.style.background = 'rgba(0,0,0,0.4)';
-    overlay.style.display = 'grid';
-    overlay.style.placeItems = 'center';
-    overlay.style.zIndex = 9999;
+    overlay.className = 'vmodal-overlay';
 
-    const box = document.createElement('div');
-    box.style.width = 'min(920px,96vw)';
-    box.style.maxHeight = '80vh';
-    box.style.overflow = 'auto';
-    box.style.background = '#fff';
-    box.style.borderRadius = '10px';
-    box.style.padding = '18px';
+    const modal = document.createElement('div');
+    modal.className = 'vmodal';
+    modal.setAttribute('role','dialog');
+    modal.setAttribute('aria-label','행정구역 선택');
 
-    const h = document.createElement('h3');
-    h.textContent = '검색 결과 - 선택하세요';
-    box.appendChild(h);
+    const header = document.createElement('div'); header.className = 'vmodal-header';
+    const title = document.createElement('div'); title.className = 'vmodal-title'; title.textContent = '행정구역 선택';
+    const closeBtn = document.createElement('button'); closeBtn.className = 'vmodal-close'; closeBtn.innerHTML = '&times;';
+    closeBtn.onclick = () => document.body.removeChild(overlay);
+    header.appendChild(title); header.appendChild(closeBtn);
 
-    const grid = document.createElement('div');
-    grid.className = 'results-grid';
+    const hint = document.createElement('div'); hint.className = 'vmodal-hint'; hint.textContent = `"${query||''}" 검색 결과입니다. 정확한 지역을 선택해 주세요.`;
 
-    // headings
-    const headings = ['명칭 / 주소','id','위도','경도'];
-    headings.forEach(hn => {
-      const cell = document.createElement('div');
-      cell.className = 'result-grid-cell result-grid-heading';
-      cell.textContent = hn;
-      grid.appendChild(cell);
-    });
+    const list = document.createElement('div'); list.className = 'vmodal-list';
 
     items.forEach(it => {
-      const nameCell = document.createElement('div');
-      nameCell.className = 'result-grid-cell';
-      nameCell.textContent = it.title || (it.address && (it.address.parcel || it.address.road)) || '';
-      grid.appendChild(nameCell);
+      const itemBtn = document.createElement('button');
+      itemBtn.className = 'vmodal-item';
 
-      const idCell = document.createElement('div');
-      idCell.className = 'result-grid-cell';
-      idCell.textContent = it.id || '';
-      grid.appendChild(idCell);
+      const left = document.createElement('div'); left.className = 'vmodal-item-left'; left.innerHTML = '📍';
+      const right = document.createElement('div'); right.className = 'vmodal-item-right';
+      const name = document.createElement('div'); name.className = 'vmodal-item-name'; name.textContent = it.title || (it.address && (it.address.parcel || it.address.road)) || '';
+      const sub = document.createElement('div'); sub.className = 'vmodal-item-sub';
+      sub.textContent = (it.address && (it.address.road || it.address.parcel)) || '';
 
-      const y = (it.point && it.point.y) ? it.point.y : (it.raw && it.raw.point && it.raw.point.y) || '';
-      const x = (it.point && it.point.x) ? it.point.x : (it.raw && it.raw.point && it.raw.point.x) || '';
-      const latCell = document.createElement('div'); latCell.className='result-grid-cell'; latCell.textContent = y;
-      const lonCell = document.createElement('div'); lonCell.className='result-grid-cell'; lonCell.textContent = x;
-      grid.appendChild(latCell);
-      grid.appendChild(lonCell);
+      right.appendChild(name); right.appendChild(sub);
+      itemBtn.appendChild(left); itemBtn.appendChild(right);
 
-      const rowBtn = document.createElement('button');
-      rowBtn.textContent = '선택';
-      rowBtn.style.gridColumn = 'span 4';
-      rowBtn.style.margin = '8px 0 0';
-      rowBtn.onclick = () => {
-        document.body.removeChild(overlay);
-        onSelect(it);
-      };
-      // wrap button in a cell
-      const btnCell = document.createElement('div'); btnCell.className='result-grid-cell'; btnCell.style.borderRight='0'; btnCell.appendChild(rowBtn);
-      // to keep grid columns consistent, add 3 empty placeholder cells then button cell
-      // but simpler: append three empty cells and then button cell
-      // we already added 4 columns, so append placeholder to align
-      // (not necessary for functionality)
-      // insert below
-      grid.appendChild(document.createElement('div'));
-      grid.appendChild(document.createElement('div'));
-      grid.appendChild(document.createElement('div'));
-      grid.appendChild(btnCell);
+      itemBtn.onclick = () => { document.body.removeChild(overlay); onSelect(it); };
+      list.appendChild(itemBtn);
     });
 
-    box.appendChild(grid);
-
-    const close = document.createElement('button');
-    close.textContent = '닫기';
-    close.style.marginTop = '12px';
-    close.onclick = () => document.body.removeChild(overlay);
-    box.appendChild(close);
-
-    overlay.appendChild(box);
+    modal.appendChild(header);
+    modal.appendChild(hint);
+    modal.appendChild(list);
+    overlay.appendChild(modal);
     document.body.appendChild(overlay);
   }
 
@@ -98,31 +58,31 @@
       return;
     }
 
-    const grid = document.createElement('div');
-    grid.className = 'results-grid';
-
-    const headers = ['관리번호','설치장소','시도','시군구','도로명주소','지번주소','위치(위도,경도)'];
-    headers.forEach(h => { const c = document.createElement('div'); c.className='result-grid-cell result-grid-heading'; c.textContent = h; grid.appendChild(c); });
-
-    items.forEach(it => {
-      const cells = [];
-      cells.push(it.MNG_NO || '');
-      cells.push(it.INSTL_PLC_NM || '');
-      cells.push(it.CTPV_NM || '');
-      cells.push(it.SGG_NM || '');
-      cells.push(it.LCTN_ROAD_NM_ADDR || '');
-      cells.push(it.LCTN_LOTNO_ADDR || '');
-      const coord = ((it.LAT && it.LOT) ? `${it.LAT}, ${it.LOT}` : '');
-      cells.push(coord);
-
-      cells.forEach(text => { const c = document.createElement('div'); c.className='result-grid-cell'; c.setAttribute('data-row','1'); c.textContent = text; grid.appendChild(c); });
-    });
-
     resultsEl.innerHTML = '';
     const headerWrap = document.createElement('div'); headerWrap.className='results-header';
     const h2 = document.createElement('h2'); h2.textContent = `의류수거함 ${items.length}건`; headerWrap.appendChild(h2);
-    const count = document.createElement('div'); count.className='result-count'; count.textContent = `${items.length}`; headerWrap.appendChild(count);
     resultsEl.appendChild(headerWrap);
+
+    const grid = document.createElement('div'); grid.className = 'results-grid cards';
+
+    items.forEach(it => {
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'result-card';
+
+      const title = document.createElement('div'); title.className = 'card-title'; title.textContent = it.INSTL_PLC_NM || it.title || '';
+      const addr = document.createElement('div'); addr.className = 'card-addr'; addr.textContent = it.LCTN_ROAD_NM_ADDR || it.LCTN_LOTNO_ADDR || (it.address && (it.address.road || it.address.parcel)) || '';
+      const note = document.createElement('div'); note.className = 'card-note'; note.textContent = it.MNG_NO ? `관리번호 ${it.MNG_NO}` : '';
+
+      card.appendChild(title);
+      card.appendChild(addr);
+      if(note.textContent) card.appendChild(note);
+
+      card.onclick = () => { setStatus(`${title.textContent} 선택됨`, 'success'); };
+
+      grid.appendChild(card);
+    });
+
     resultsEl.appendChild(grid);
   }
 
@@ -194,7 +154,7 @@
     if(!q) return;
 
     // addressType comes from a select now
-    const addrType = (document.querySelector('select[name="addressType"]') || {}).value || 'road';
+    const addrType = document.querySelector('input[name="addressType"]:checked').value;
     // Use ROAD for road names, DISTRICT for 지번 (읍/면/동) searches
     const vtype = addrType === 'road' ? 'ROAD' : 'DISTRICT';
     const params = { query: q, type: vtype, size: 100, page: 1, format: 'json' };
@@ -214,7 +174,7 @@
       }
 
       // show popup grid and pass addrType so selection uses correct field
-      createModal(items, (selected) => onSelectVworld(selected, q, addrType));
+      createModal(items, (selected) => onSelectVworld(selected, q, addrType), q);
       setStatus(`결과 ${items.length}건 - 항목을 선택하세요.`, 'success');
     }catch(err){
       console.error(err);
@@ -239,7 +199,7 @@
           { id:'1168010100', title:'서울특별시 중랑구 면목동', address:{parcel:'면목동', road:'면목로 1'}, point:{x:'127.08',y:'37.59'}, raw:{} },
           { id:'1168010200', title:'서울특별시 중랑구 용마동', address:{parcel:'용마동', road:'용마산로 45'}, point:{x:'127.09',y:'37.58'}, raw:{} }
         ];
-        createModal(sample, (selected) => onSelectVworld(selected, q, addrType));
+        createModal(sample, (selected) => onSelectVworld(selected, q, addrType), q);
       };
       resultsEl.appendChild(mockBtn);
     }

@@ -37,15 +37,44 @@ body{
 .search-controls input[type="text"]{ flex:1; height:56px; border-radius:12px; padding:0 16px; border:1px solid #dbe7df; font-size:16px; }
 .search-btn{ height:56px; padding:0 20px; border-radius:12px; background:var(--accent); border:none; color:#fff; font-weight:800; box-shadow:0 8px 20px rgba(15,118,110,0.12); }
 
+/* radio option styling (pills) */
+.addr-radios{ display:flex; gap:10px; }
+.radio-option{ display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border-radius:12px; border:1px solid #dbe7df; background:var(--card); cursor:pointer; font-weight:700; }
+.radio-option input{ margin-right:6px; }
+.radio-option:has(input:checked){ border-color:var(--accent-600); background:linear-gradient(180deg,#eaffef,#f2fff6); color:var(--accent-600); }
+
 /* Main content area */
 .content{ max-width:1200px; margin:28px auto 80px; display:grid; grid-template-columns: 1fr 1fr; gap:28px; padding:0 24px; }
 .list-card, .map-card{ background:var(--card); border-radius:14px; padding:20px; box-shadow:0 12px 32px rgba(15,118,110,0.06); }
 .list-card h2{ margin:0 0 12px; font-size:20px; color:#0b3b2d; }
 
 .results-section{ margin-top:8px; }
-.results-grid{ display:grid; grid-template-columns: repeat(3,1fr); gap:10px; }
+/* flexible card grid for many items */
+.results-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:12px; align-items:start; }
+
+/* card style used in results */
+.result-card{ display:flex; flex-direction:column; align-items:flex-start; gap:8px; padding:12px; border-radius:12px; background:#f8faf8; border:1px solid #e6f3ea; cursor:pointer; text-align:left; }
+.result-card:hover{ box-shadow:0 8px 20px rgba(15,118,110,0.06); transform:translateY(-4px); }
+.card-title{ font-weight:800; color:#0b4b38; }
+.card-addr{ color:#2f4f45; font-size:14px; }
+.card-note{ font-size:12px; color:#516a60; }
+
+/* keep legacy grid heading/cell styles for any other usage */
 .results-grid .result-grid-heading{ font-weight:800; background:#f6faf7; padding:8px 12px; border-radius:10px; }
 .result-grid-cell{ padding:12px; background:#f8faf8; border-radius:10px; border:1px solid #eef6ef; }
+
+/* modal (popup) styles matching sample/popup_ex.png */
+.vmodal-overlay{ position:fixed; inset:0; pointer-events:auto; z-index:9998; }
+.vmodal{ position:fixed; top:28px; left:18px; width:420px; max-width:calc(100% - 36px); background:var(--card); border-radius:12px; padding:14px; box-shadow:0 12px 30px rgba(15,118,110,0.12); border:1px solid rgba(15,118,110,0.06); backdrop-filter: blur(4px); }
+.vmodal-header{ display:flex; align-items:center; justify-content:space-between; }
+.vmodal-title{ font-weight:800; color:#133d2e; }
+.vmodal-close{ background:transparent; border:0; font-size:20px; line-height:1; cursor:pointer; color:#374151; }
+.vmodal-hint{ margin-top:8px; color:#475057; font-size:13px; }
+.vmodal-list{ margin-top:12px; display:flex; flex-direction:column; gap:10px; }
+.vmodal-item{ display:flex; align-items:center; gap:12px; padding:12px; border-radius:10px; border:2px solid rgba(15,118,110,0.12); background:linear-gradient(180deg,#fff,#fbfff9); cursor:pointer; text-align:left; }
+.vmodal-item-left{ width:36px; height:36px; display:flex; align-items:center; justify-content:center; border-radius:8px; background:#f0fff4; color:var(--accent-600); }
+.vmodal-item-name{ font-weight:800; color:#0b4b38; }
+.vmodal-item-sub{ color:#4b6b63; font-size:13px; }
 
 /* map */
 .map-container{ width:100%; height:420px; border-radius:10px; overflow:hidden; background:linear-gradient(180deg,#ffffff,#f2f7f3); display:flex; align-items:center; justify-content:center; color:var(--muted); font-weight:700; }

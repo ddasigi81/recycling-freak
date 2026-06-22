@@ -26,11 +26,15 @@
 
         <form id="search-form" class="search-bar" action="/search" method="get">
           <div class="search-controls">
-            <div class="select-type">
-              <select name="addressType" aria-label="주소 유형">
-                <option value="road">도로명</option>
-                <option value="jibun">지번(읍면동)</option>
-              </select>
+            <div class="addr-radios" role="radiogroup" aria-label="주소 유형">
+              <label class="radio-option" for="address-type-road">
+                <input type="radio" name="addressType" id="address-type-road" value="road" checked>
+                도로명
+              </label>
+              <label class="radio-option" for="address-type-jibun">
+                <input type="radio" name="addressType" id="address-type-jibun" value="jibun">
+                지번(읍면동)
+              </label>
             </div>
 
             <input
