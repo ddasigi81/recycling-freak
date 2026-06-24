@@ -1,0 +1,9 @@
+# Ignore local key file
+js/keys.local.js
+
+# Node modules should not be committed
+node_modules/
+
+# Editor / OS files
+.vscode/
+.DS_Store

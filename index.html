@@ -116,6 +116,10 @@
           <input id="kakaoKeyInput" type="text" class="field__input" placeholder="Kakao JavaScript Key" />
         </label>
         <label class="field">
+          <span class="field__label">VWorld API Key</span>
+          <input id="vworldKeyInput" type="text" class="field__input" placeholder="VWorld API Key" />
+        </label>
+        <label class="field">
           <span class="field__label">공공데이터포털 서비스키 (data.go.kr)</span>
           <input id="dataKeyInput" type="text" class="field__input" placeholder="Service Key" />
         </label>
@@ -128,6 +132,16 @@
 
     <!-- lucide 아이콘 -->
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <!-- Load optional local keys (js/keys.local.js) if present; not committed to repo -->
+    <script>
+      (function(){
+        var s = document.createElement('script');
+        s.src = 'js/keys.local.js';
+        s.async = false;
+        s.onerror = function(){ /* no-op if file missing */ };
+        document.head.appendChild(s);
+      })();
+    </script>
     <script src="js/config.js"></script>
     <script src="js/data.js"></script>
     <script src="js/api.js"></script>
