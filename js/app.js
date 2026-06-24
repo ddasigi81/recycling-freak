@@ -75,49 +75,6 @@ async function doRegionSearch() {
     document.getElementById("searchInput").focus();
     return;
   }
-
-  // If clothing category selected, use VWorld search and show the custom modal (two-column preview)
-  if (State.category && State.category.id === "clothing" && window.vworldClient) {
-    try {
-      setRegionDialogLoading(true);
-      // build vworld params
-      const vtype = State.searchMode === "road" ? "ROAD" : "DISTRICT";
-      const resp = await window.vworldClient.searchFeatures({ query: keyword, type: vtype, size: 100, category: vtype === 'DISTRICT' ? 'L4' : undefined });
-      const items = (resp && resp.items) || [];
-      setRegionDialogLoading(false);
-      if (!items.length) {
-        // fallback to existing dialog
-        openRegionDialog();
-        renderRegionResults([], keyword);
-        return;
-      }
-      // show custom modal using vworld results
-      createVWorldModal(items, (selected) => {
-        // map selected vworld item into region object compatible with loadForRegion
-        const region = {
-          type: State.searchMode === "road" ? "road" : "jibun",
-          fullName: selected.title || (selected.address && (selected.address.road || selected.address.parcel)) || "",
-          sigungu: (selected.address && (selected.address.sigungu || selected.address.sgg || selected.address.region)) || "",
-          road: (selected.address && selected.address.road) || "",
-          emd: (selected.address && selected.address.parcel) || "",
-          lat: selected.point ? parseFloat(selected.point.y) : (selected.raw && selected.raw.y) || 0,
-          lng: selected.point ? parseFloat(selected.point.x) : (selected.raw && selected.raw.x) || 0,
-        };
-        State.region = region;
-        loadForRegion();
-      }, keyword);
-    } catch (e) {
-      console.error('VWorld search failed, falling back to default region dialog', e);
-      setRegionDialogLoading(false);
-      openRegionDialog();
-      const regions = await Api.searchRegions(keyword, State.searchMode);
-      renderRegionResults(regions, keyword);
-    }
-
-    return;
-  }
-
-  // default path: use Api.searchRegions (juso or dummy)
   openRegionDialog();
   setRegionDialogLoading(true);
   const regions = await Api.searchRegions(keyword, State.searchMode);
@@ -136,60 +93,6 @@ function closeRegionDialog() {
   dlg.classList.remove("is-open");
   dlg.setAttribute("aria-hidden", "true");
 }
-
-/* ----------------------------- VWorld Custom Modal ----------------------------- */
-function createVWorldModal(items, onSelect, query) {
-  // Build modal DOM similar to popup_ex.png (two-column)
-  const overlay = document.createElement('div');
-  overlay.className = 'vmodal-overlay';
-
-  const modal = document.createElement('div');
-  modal.className = 'vmodal vmodal-wide';
-
-  const header = document.createElement('div'); header.className = 'vmodal-header';
-  const titleWrap = document.createElement('div'); titleWrap.className='vmodal-title-wrap';
-  const icon = document.createElement('div'); icon.className='vmodal-title-icon'; icon.textContent='♻️';
-  const title = document.createElement('div'); title.className = 'vmodal-title'; title.textContent = '검색 결과';
-  titleWrap.appendChild(icon); titleWrap.appendChild(title);
-  const closeBtn = document.createElement('button'); closeBtn.className = 'vmodal-close'; closeBtn.setAttribute('aria-label','닫기'); closeBtn.innerHTML = '&times;';
-  closeBtn.onclick = () => document.body.removeChild(overlay);
-  header.appendChild(titleWrap); header.appendChild(closeBtn);
-
-  const subtitle = document.createElement('div'); subtitle.className='vmodal-sub'; subtitle.textContent = `"${query||''}" 검색 결과 — 정확한 지역을 선택하세요.`;
-
-  const bodyGrid = document.createElement('div'); bodyGrid.className='vmodal-grid';
-  const leftCol = document.createElement('div'); leftCol.className='vmodal-left';
-  const list = document.createElement('div'); list.className = 'vmodal-list';
-
-  items.forEach((it, idx) => {
-    const itemBtn = document.createElement('button'); itemBtn.className = 'vmodal-item-row';
-    const num = document.createElement('div'); num.className='vmodal-num'; num.textContent = (idx+1);
-    const meta = document.createElement('div'); meta.className='vmodal-meta';
-    const name = document.createElement('div'); name.className='vmodal-item-name'; name.textContent = it.title || (it.address && (it.address.parcel || it.address.road)) || '';
-    const sub = document.createElement('div'); sub.className='vmodal-item-sub'; sub.textContent = (it.address && (it.address.road || it.address.parcel)) || '';
-    meta.appendChild(name); meta.appendChild(sub);
-    itemBtn.appendChild(num); itemBtn.appendChild(meta);
-    itemBtn.addEventListener('click', () => { document.body.removeChild(overlay); onSelect(it); });
-    list.appendChild(itemBtn);
-  });
-
-  leftCol.appendChild(list);
-  const rightCol = document.createElement('div'); rightCol.className='vmodal-right';
-  const mapPreview = document.createElement('div'); mapPreview.className='vmodal-map-preview'; mapPreview.textContent='지도 미리보기';
-  const markerCard = document.createElement('div'); markerCard.className='vmodal-marker-card'; markerCard.innerHTML = `<div class="mc-num">1</div><div class="mc-text">선택 항목 미리보기<br/><span class="mc-sub">중소형 가전 근처</span></div>`;
-  rightCol.appendChild(mapPreview); rightCol.appendChild(markerCard);
-
-  bodyGrid.appendChild(leftCol); bodyGrid.appendChild(rightCol);
-
-  const footer = document.createElement('div'); footer.className='vmodal-footer';
-  const info = document.createElement('div'); info.className='vmodal-footer-info'; info.textContent='목록에서 항목을 선택하면 해당 위치의 의류수거함을 조회합니다.';
-  footer.appendChild(info);
-
-  modal.appendChild(header); modal.appendChild(subtitle); modal.appendChild(bodyGrid); modal.appendChild(footer);
-  overlay.appendChild(modal);
-  document.body.appendChild(overlay);
-}
-
 function setRegionDialogLoading(loading) {
   document.getElementById("regionResults").innerHTML = loading
     ? `<li class="region-loading">전국에서 검색 중...</li>`

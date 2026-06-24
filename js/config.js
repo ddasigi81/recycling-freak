@@ -81,12 +81,4 @@ const CATEGORIES = [
     endpoint: "https://api.data.go.kr/openapi/tn_pubr_public_bulky_waste_fee_api",
     fields: { item: "prdlstNm", spec: "standardNm", fee: "amount" },
   },
-  {
-    id: "householdWaste",
-    label: "생활쓰레기 배출정보",
-    icon: "trash-2",
-    type: "info",
-    endpoint: "https://api.data.go.kr/openapi/tn_pubr_public_household_waste_api",
-    fields: { title: "se", day: "dscrgDay", time: "dscrgTime", method: "dscrgMth" },
-  },
 ];
