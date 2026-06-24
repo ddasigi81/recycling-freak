@@ -17,13 +17,21 @@ const CONFIG = {
     return localStorage.getItem("KAKAO_JS_KEY") || "";
   },
   get DATA_GO_KR_KEY() {
-    return localStorage.getItem("DATA_GO_KR_KEY") || "";
+    return localStorage.getItem("DATA_GO_KR_KEY") || (typeof window !== 'undefined' && window.DATA_GO_KR_KEY) || "";
+  },
+  get VWORLD_API_KEY() {
+    // Prefer Cloudflare-injected global, then localStorage
+    return (typeof window !== 'undefined' && window.VWORLD_API_KEY) || localStorage.getItem("VWORLD_API_KEY") || "";
+  },
+  get CLOTHING_COLLECT_BINS_API_KEY() {
+    return (typeof window !== 'undefined' && window.CLOTHING_COLLECT_BINS_API_KEY) || localStorage.getItem("CLOTHING_COLLECT_BINS_API_KEY") || "";
   },
 
-  // 키가 모두 없으면 더미 데이터 모드
+  // 키가 모두 없으면 더미 데이터 모드 (any of known keys present -> live)
   get USE_DUMMY() {
-    return !this.DATA_GO_KR_KEY;
+    return !this.DATA_GO_KR_KEY && !this.VWORLD_API_KEY && !this.CLOTHING_COLLECT_BINS_API_KEY;
   },
+
 
   // 지도 기본 좌표 (서울시청)
   DEFAULT_CENTER: { lat: 37.5665, lng: 126.978 },

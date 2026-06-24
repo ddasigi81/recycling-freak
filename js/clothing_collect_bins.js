@@ -4,10 +4,14 @@
  */
 (function(){
   const DEFAULT_BASE = (typeof window !== 'undefined' && window.CLOTHING_BINS_BASE) ? window.CLOTHING_BINS_BASE : 'https://api.data.go.kr/openapi';
-  let SERVICE_KEY = (typeof window !== 'undefined' && window.CLOTHING_BINS_SERVICE_KEY) ? window.CLOTHING_BINS_SERVICE_KEY : '';
+  // Prefer Cloudflare Pages injected var CLOTHING_COLLECT_BINS_API_KEY, then legacy window var, then env
+  let SERVICE_KEY = (typeof window !== 'undefined' && (window.CLOTHING_COLLECT_BINS_API_KEY || window.CLOTHING_BINS_SERVICE_KEY)) ? (window.CLOTHING_COLLECT_BINS_API_KEY || window.CLOTHING_BINS_SERVICE_KEY) : '';
   let BASE = DEFAULT_BASE;
 
-  function setServiceKey(key){ SERVICE_KEY = key; if(typeof window !== 'undefined') window.CLOTHING_BINS_SERVICE_KEY = key; }
+  function setServiceKey(key){ SERVICE_KEY = key; if(typeof window !== 'undefined') {
+    window.CLOTHING_BINS_SERVICE_KEY = key;
+    try{ window.CLOTHING_COLLECT_BINS_API_KEY = key; }catch(e){}
+  } }
   function setBaseUrl(url){ BASE = url; if(typeof window !== 'undefined') window.CLOTHING_BINS_BASE = url; }
 
   function buildParams(params){

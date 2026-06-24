@@ -263,17 +263,30 @@ function bindKeyDialog() {
   const saveBtn = document.getElementById("saveKeys");
   openBtn.addEventListener("click", () => {
     document.getElementById("kakaoKeyInput").value = CONFIG.KAKAO_JS_KEY;
+    document.getElementById("vworldKeyInput").value = CONFIG.VWORLD_API_KEY || "";
+    document.getElementById("clothingKeyInput").value = CONFIG.CLOTHING_COLLECT_BINS_API_KEY || "";
     document.getElementById("dataKeyInput").value = CONFIG.DATA_GO_KR_KEY;
     dlg.classList.add("is-open");
     dlg.setAttribute("aria-hidden", "false");
   });
   saveBtn.addEventListener("click", () => {
     const kakao = document.getElementById("kakaoKeyInput").value.trim();
+    const vworld = document.getElementById("vworldKeyInput").value.trim();
+    const clothing = document.getElementById("clothingKeyInput").value.trim();
     const data = document.getElementById("dataKeyInput").value.trim();
     if (kakao) localStorage.setItem("KAKAO_JS_KEY", kakao);
     else localStorage.removeItem("KAKAO_JS_KEY");
+    if (vworld) localStorage.setItem("VWORLD_API_KEY", vworld);
+    else localStorage.removeItem("VWORLD_API_KEY");
+    if (clothing) localStorage.setItem("CLOTHING_COLLECT_BINS_API_KEY", clothing);
+    else localStorage.removeItem("CLOTHING_COLLECT_BINS_API_KEY");
     if (data) localStorage.setItem("DATA_GO_KR_KEY", data);
     else localStorage.removeItem("DATA_GO_KR_KEY");
+    // Apply to clients if present
+    try{
+      if(window.vworldClient && typeof window.vworldClient.setVworldApiKey === 'function') window.vworldClient.setVworldApiKey(vworld);
+      if(window.clothingBinsClient && typeof window.clothingBinsClient.setServiceKey === 'function') window.clothingBinsClient.setServiceKey(clothing);
+    }catch(e){}
     location.reload();
   });
 
