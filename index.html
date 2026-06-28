@@ -28,12 +28,6 @@
             <p class="brand__subtitle">우리 동네 분리수거함 · 폐기물 배출정보</p>
           </div>
         </div>
-        <div class="site-header__actions">
-          <span id="modeBadge" class="mode-badge mode-badge--dummy">샘플 데이터 모드</span>
-          <button id="openKeyDialog" class="btn btn--ghost">
-            <span data-lucide="key-round"></span> API 키 설정
-          </button>
-        </div>
       </div>
     </header>
 
@@ -98,53 +92,9 @@
       </div>
     </div>
 
-    <!-- API 키 설정 팝업 -->
-    <div id="keyDialog" class="dialog" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="keyDialogTitle">
-      <div class="dialog__overlay"></div>
-      <div class="dialog__box">
-        <div class="dialog__head">
-          <h2 id="keyDialogTitle" class="dialog__title">API 키 설정</h2>
-          <button class="dialog__close" data-close-dialog aria-label="닫기">
-            <span data-lucide="x"></span>
-          </button>
-        </div>
-        <p class="dialog__desc">
-          키를 입력하면 실제 OpenAPI와 연동됩니다. 비워두면 내장 샘플 데이터로 동작합니다.
-        </p>
-        <label class="field">
-          <span class="field__label">카카오 지도 JavaScript 키</span>
-          <input id="kakaoKeyInput" type="text" class="field__input" placeholder="Kakao JavaScript Key" />
-        </label>
-        <label class="field">
-          <span class="field__label">Clothing Collect Bins API Key</span>
-          <input id="clothingKeyInput" type="text" class="field__input" placeholder="CLOTHING_COLLECT_BINS_API_KEY" />
-        </label>
-        <label class="field">
-          <span class="field__label">공공데이터포털 서비스키 (data.go.kr)</span>
-          <input id="dataKeyInput" type="text" class="field__input" placeholder="Service Key" />
-        </label>
-        <div class="dialog__foot">
-          <button class="btn btn--ghost" data-close-dialog>취소</button>
-          <button id="saveKeys" class="btn btn--primary">저장 후 새로고침</button>
-        </div>
-      </div>
-    </div>
-
     <!-- lucide 아이콘 -->
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-    <!-- Load optional local keys (js/keys.local.js) if present; not committed to repo -->
-    <script>
-      (function(){
-        var s = document.createElement('script');
-        s.src = 'js/keys.local.js';
-        s.async = false;
-        s.onerror = function(){ /* no-op if file missing */ };
-        document.head.appendChild(s);
-      })();
-    </script>
     <script src="js/config.js"></script>
-    <script src="js/vworld.js"></script>
-    <script src="js/data.js"></script>
     <script src="js/api.js"></script>
     <script src="js/map.js"></script>
     <script src="js/app.js"></script>

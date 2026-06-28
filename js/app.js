@@ -11,12 +11,12 @@ const State = {
   bins: [],
 };
 
+let regionSearchController = null;
+
 document.addEventListener("DOMContentLoaded", () => {
   renderCategoryTabs();
-  bindSearchControls();
-  bindKeyDialog();
+  bindEventListeners();
   MapController.init("mapArea", onMarkerClicked);
-  refreshKeyBadge();
   if (window.lucide) {
     window.lucide.createIcons();
   }
@@ -64,7 +64,8 @@ function renderCategoryTabs() {
   }
 }
 
-function bindSearchControls() {
+function bindEventListeners() {
+  // 검색 모드 변경 (도로명/지번)
   const modeBtns = document.querySelectorAll(".seg-btn");
   modeBtns.forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -79,11 +80,23 @@ function bindSearchControls() {
     });
   });
 
+  // 검색 폼 제출
   const searchForm = document.getElementById("searchForm");
   if (searchForm) {
     searchForm.addEventListener("submit", (e) => {
       e.preventDefault();
       doRegionSearch();
+    });
+  }
+
+  // 지역 검색 결과 팝업 닫기 버튼
+  const closeBtn = document.querySelector(".dialog__close");
+  if (closeBtn) {
+    closeBtn.addEventListener("click", () => {
+      if (regionSearchController) {
+        regionSearchController.abort();
+      }
+      closeRegionDialog();
     });
   }
 }
@@ -98,16 +111,25 @@ async function doRegionSearch() {
   }
   State.searchKeyword = keyword;
 
+  if (regionSearchController) {
+    regionSearchController.abort();
+  }
+  regionSearchController = new AbortController();
+  const signal = regionSearchController.signal;
+
   openRegionDialog();
   setRegionDialogLoading(true);
   try {
-    const regions = await Api.searchRegions(keyword, State.searchMode);
+    const regions = await Api.searchRegions(keyword, State.searchMode, signal);
+    if (signal.aborted) return;
     setRegionDialogLoading(false);
     renderRegionResults(regions, keyword);
   } catch (error) {
-    console.error("doRegionSearch: 지역 검색 중 오류 발생:", error);
-    setRegionDialogLoading(false);
-    renderRegionResults([], keyword); // Show empty result on error
+    if (error.name !== 'AbortError') {
+      console.error("doRegionSearch: 지역 검색 중 오류 발생:", error);
+      setRegionDialogLoading(false);
+      renderRegionResults([], keyword);
+    }
   }
 }
 
@@ -188,8 +210,20 @@ async function loadForRegion() {
 
   try {
     const allData = await Api.fetchDataForCategory(region, category);
+    
     if (category.type === "bin") {
-      const filteredBins = allData.filter(bin => bin.addr && bin.addr.includes(searchKeyword));
+      let filteredBins = allData;
+      // 검색 모드와 키워드에 따라 필터링을 적용합니다.
+      if (searchKeyword) {
+        if (State.searchMode === 'jibun') {
+          // 지번 검색: 지번 주소(lctnLotnoAddr)에 검색 키워드가 포함된 항목만 필터링합니다.
+          filteredBins = allData.filter(bin => bin.addr_jibun && bin.addr_jibun.includes(searchKeyword));
+        } else if (State.searchMode === 'road') {
+          // 도로명 검색: 도로명 주소(lctnRoadNmAddr)에 검색 키워드가 포함된 항목만 필터링합니다.
+          filteredBins = allData.filter(bin => bin.addr_road && bin.addr_road.includes(searchKeyword));
+        }
+      }
+      
       State.bins = filteredBins;
       renderBinList(filteredBins);
       MapController.render(filteredBins, { lat: region.lat, lng: region.lng });
@@ -311,61 +345,6 @@ function updateEmptyState() {
     </li>`;
   }
   if (window.lucide) window.lucide.createIcons();
-}
-
-function bindKeyDialog() {
-  const openBtn = document.getElementById("openKeyDialog");
-  const dlg = document.getElementById("keyDialog");
-  const saveBtn = document.getElementById("saveKeys");
-  const closeBtns = document.querySelectorAll("[data-close-dialog], .dialog__overlay");
-
-  if (!openBtn || !dlg || !saveBtn) return;
-
-  openBtn.addEventListener("click", () => {
-    const kakaoInput = document.getElementById("kakaoKeyInput");
-    const clothingInput = document.getElementById("clothingKeyInput");
-    const dataInput = document.getElementById("dataKeyInput");
-
-    if (kakaoInput) kakaoInput.value = localStorage.getItem("KAKAO_JS_KEY") || "";
-    if (clothingInput) clothingInput.value = localStorage.getItem("CLOTHING_COLLECT_BINS_API_KEY") || "";
-    if (dataInput) dataInput.value = localStorage.getItem("DATA_GO_KR_KEY") || "";
-    
-    dlg.classList.add("is-open");
-    dlg.setAttribute("aria-hidden", "false");
-  });
-
-  saveBtn.addEventListener("click", () => {
-    const kakaoInput = document.getElementById("kakaoKeyInput");
-    const clothingInput = document.getElementById("clothingKeyInput");
-    const dataInput = document.getElementById("dataKeyInput");
-
-    if (kakaoInput) localStorage.setItem("KAKAO_JS_KEY", kakaoInput.value.trim());
-    if (clothingInput) localStorage.setItem("CLOTHING_COLLECT_BINS_API_KEY", clothingInput.value.trim());
-    if (dataInput) localStorage.setItem("DATA_GO_KR_KEY", dataInput.value.trim());
-    
-    location.reload();
-  });
-
-  closeBtns.forEach(btn => btn.addEventListener("click", (e) => {
-    const aDialog = e.currentTarget.closest(".dialog");
-    if (aDialog) {
-        aDialog.classList.remove("is-open");
-        aDialog.setAttribute("aria-hidden", "true");
-    }
-  }));
-}
-
-function refreshKeyBadge() {
-  const badge = document.getElementById("modeBadge");
-  if (!badge) return;
-
-  if (CONFIG.USE_DUMMY) {
-    badge.textContent = "샘플 데이터 모드";
-    badge.className = "mode-badge mode-badge--dummy";
-  } else {
-    badge.textContent = "OpenAPI 연동 모드";
-    badge.className = "mode-badge mode-badge--live";
-  }
 }
 
 function escapeHtml(str) {
