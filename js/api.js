@@ -1,121 +1,145 @@
 /* =========================================================================
  * api.js
  * OpenAPI 연동 계층.
- *  - 키가 설정되어 있으면 공공데이터포털(data.go.kr) 호출
- *  - 키가 없으면 data.js 의 더미 데이터로 폴백
- * 모든 함수는 Promise 를 반환합니다.
+ * - 페이지네이션, 카테고리별 API 분기, 오류 처리 등을 담당합니다.
  * ========================================================================= */
 
+/**
+ * 주어진 엔드포인트에 대해 모든 페이지를 조회하여 결과를 병합합니다.
+ * @param {string} endpoint - API 엔드포인트 URL
+ * @param {object} baseParams - 페이지 번호 외의 기본 요청 파라미터
+ * @param {number} numOfRows - 페이지당 요청할 항목 수
+ * @returns {Promise<Array>} 병합된 전체 아이템 배열
+ */
+async function fetchPaginatedData(endpoint, baseParams, numOfRows = 100) {
+  let allItems = [];
+  let pageNo = 1;
+
+  while (true) {
+    const params = new URLSearchParams({
+      ...baseParams,
+      pageNo: pageNo.toString(),
+      numOfRows: numOfRows.toString(),
+    });
+
+    try {
+      const res = await fetch(`${endpoint}?${params}`);
+      if (!res.ok) {
+        // Log and break instead of throwing, to handle non-critical API failures gracefully
+        console.error(`API request to ${endpoint} failed with status ${res.status}`);
+        break;
+      }
+      const json = await res.json();
+      const items = extractItems(json);
+
+      if (items.length > 0) {
+        allItems = allItems.concat(items);
+      }
+
+      // Determine total count from various possible response structures
+      const totalCount = parseInt(json?.response?.body?.totalCount ?? json?.totalCount ?? json?.total_count ?? 0, 10);
+
+      if (items.length === 0 || items.length < numOfRows || (totalCount > 0 && allItems.length >= totalCount)) {
+        break;
+      }
+
+      pageNo++;
+      if (pageNo > 50) { // Safety break
+        console.warn("Pagination loop exceeded 50 pages, breaking.");
+        break;
+      }
+    } catch (error) {
+      console.error(`Error fetching paginated data from ${endpoint}:`, error);
+      break;
+    }
+  }
+  return allItems;
+}
+
 const Api = {
-  /* 지역 검색: 도로명/읍면동 입력 -> 전국 동일 명칭 후보 목록 */
+  /* 지역 검색 (Kakao API via Worker) */
   async searchRegions(keyword, mode) {
     if (CONFIG.USE_DUMMY) {
-      await delay(250);
       return searchRegionsDummy(keyword, mode);
     }
-    // 실제 연동 예시 (행정안전부 도로명주소 OpenAPI)
-    // const url = `https://business.juso.go.kr/addrlink/addrLinkApi.do?confmKey=${CONFIG.DATA_GO_KR_KEY}&currentPage=1&countPerPage=100&keyword=${encodeURIComponent(keyword)}&resultType=json`;
-    // const res = await fetch(url);
-    // const json = await res.json();
-    // return (json.results?.juso || []).map(mapJusoToRegion);
     try {
-      const url =
-        `https://business.juso.go.kr/addrlink/addrLinkApi.do` +
-        `?confmKey=${CONFIG.DATA_GO_KR_KEY}&currentPage=1&countPerPage=100` +
-        `&keyword=${encodeURIComponent(keyword)}&resultType=json`;
-      const res = await fetch(url);
-      const json = await res.json();
-      const list = (json.results && json.results.juso) || [];
-      return list.map((j) => ({
-        type: mode,
-        sigungu: `${j.siNm} ${j.sggNm}`.trim(),
-        emd: j.emdNm,
-        road: j.rn,
-        lat: 0,
-        lng: 0,
-        displayName: mode === "road" ? j.rn : j.emdNm,
-        fullName: mode === "road" ? `${j.siNm} ${j.sggNm} ${j.rn}` : `${j.siNm} ${j.sggNm} ${j.emdNm}`,
-      }));
+      const workerUrl = `https://royal-cloud-1f37.ddasigi.workers.dev/?query=${encodeURIComponent(keyword)}`;
+      const res = await fetch(workerUrl);
+      if (!res.ok) throw new Error(`Worker request failed: ${res.status}`);
+      const kakaoResult = await res.json();
+      return (kakaoResult.documents || []).map(item => {
+        const addr = item.road_address || item.address;
+        return {
+          type: mode,
+          sigungu: `${addr.region_1depth_name || ""} ${addr.region_2depth_name || ""}`.trim(),
+          emd: addr.region_3depth_name || "",
+          road: item.road_address ? item.road_address.road_name : "",
+          lat: parseFloat(item.y), lng: parseFloat(item.x),
+          displayName: item.address_name, fullName: item.address_name,
+        };
+      }).filter(r => r.lat && r.lng);
     } catch (e) {
-      console.log("[v0] 지역 검색 API 오류, 더미로 폴백:", e.message);
+      console.error("[v0] 지역 검색 API 오류:", e);
       return searchRegionsDummy(keyword, mode);
     }
   },
 
-  /* 수거함 위치 조회 (type=bin 카테고리) */
-  async fetchBins(region, category) {
-    if (CONFIG.USE_DUMMY) {
-      await delay(350);
-      const count = 8 + Math.floor(Math.random() * 35); // 수십 건까지 발생
-      return generateDummyBins(region, category, count);
+  /* 수거함/정보 조회 - 설정 기반의 범용 API 호출 함수 */
+  async fetchDataForCategory(region, category) {
+    if (CONFIG.USE_DUMMY && category.type === 'bin') {
+        return generateDummyBins(region, category, 25);
     }
-    try {
-      const params = new URLSearchParams({
-        serviceKey: CONFIG.DATA_GO_KR_KEY,
-        pageNo: "1",
-        numOfRows: "300",
-        type: "json",
-        // 시군구/지역 파라미터는 데이터셋별 상이 — 예시
-        rdnmadr: region.fullName,
-      });
-      const res = await fetch(`${category.endpoint}?${params}`);
-      const json = await res.json();
-      const items = extractItems(json);
-      const f = category.fields;
-      return items
-        .map((it) => ({
-          name: it[f.name] || category.label,
-          addr: it[f.addr] || "",
-          lat: parseFloat(it[f.lat]),
-          lng: parseFloat(it[f.lng]),
-        }))
-        .filter((b) => !isNaN(b.lat) && !isNaN(b.lng));
-    } catch (e) {
-      console.log("[v0] 수거함 API 오류, 더미로 폴백:", e.message);
-      const count = 8 + Math.floor(Math.random() * 35);
-      return generateDummyBins(region, category, count);
+    if (CONFIG.USE_DUMMY && category.type === 'info') {
+        return category.id === "bulkyFee" ? BULKY_FEE_SAMPLE.slice() : HOUSEHOLD_WASTE_SAMPLE.slice();
     }
-  },
 
-  /* 정보형 조회 (대형폐기물 수수료 / 생활쓰레기 배출정보) */
-  async fetchInfo(region, category) {
-    if (CONFIG.USE_DUMMY) {
-      await delay(300);
-      return category.id === "bulkyFee" ? BULKY_FEE_SAMPLE.slice() : HOUSEHOLD_WASTE_SAMPLE.slice();
-    }
     try {
-      const params = new URLSearchParams({
-        serviceKey: CONFIG.DATA_GO_KR_KEY,
-        pageNo: "1",
-        numOfRows: "300",
-        type: "json",
-        rdnmadr: region.fullName,
-      });
-      const res = await fetch(`${category.endpoint}?${params}`);
-      const json = await res.json();
-      const items = extractItems(json);
-      const f = category.fields;
-      if (category.id === "bulkyFee") {
-        return items.map((it) => ({ item: it[f.item], spec: it[f.spec], fee: Number(it[f.fee]) || 0 }));
+      let baseParams;
+      const endpoint = category.endpoint;
+      const isDataGoKr = endpoint.includes("api.data.go.kr");
+
+      if (isDataGoKr) {
+        if (!CONFIG.DATA_GO_KR_KEY) return []; // 키 없으면 빈 배열 반환
+        baseParams = { serviceKey: CONFIG.DATA_GO_KR_KEY, type: "json", rdnmadr: region.fullName };
+      } else {
+        // Worker 또는 다른 외부 API
+        const sggNm = region.sigungu.split(' ').pop();
+        if (!sggNm || !category.paramName) return [];
+        baseParams = { [category.paramName]: sggNm };
       }
-      return items.map((it) => ({ title: it[f.title], day: it[f.day], time: it[f.time], method: it[f.method] }));
+
+      const allItems = await fetchPaginatedData(endpoint, baseParams);
+      const f = category.fields;
+      
+      if (category.type === 'bin') {
+        return allItems.map(it => ({
+            name: it[f.name] || category.label,
+            // 주소 필드는 도로명(addr)을 우선하고, 없으면 지번(addr_jibun) 사용
+            addr: it[f.addr] || it[f.addr_jibun] || "",
+            lat: parseFloat(it[f.lat]),
+            lng: parseFloat(it[f.lng]),
+          })).filter(b => b.addr && !isNaN(b.lat) && !isNaN(b.lng));
+      } else if (category.type === 'info') {
+         if (category.id === "bulkyFee") {
+            return allItems.map(it => ({ item: it[f.item], spec: it[f.spec], fee: Number(it[f.fee]) || 0 }));
+        }
+        return allItems.map(it => ({ title: it[f.title], day: it[f.day], time: it[f.time], method: it[f.method] }));
+      }
+
     } catch (e) {
-      console.log("[v0] 정보 API 오류, 더미로 폴백:", e.message);
-      return category.id === "bulkyFee" ? BULKY_FEE_SAMPLE.slice() : HOUSEHOLD_WASTE_SAMPLE.slice();
+      console.error(`[v0] ${category.label} API 오류:`, e.message);
+      return category.type === 'bin' ? generateDummyBins(region, category, 25) : [];
     }
   },
 };
 
-/* 공공데이터포털 응답에서 items 배열 추출 (구조가 데이터셋마다 다름) */
+/* 다양한 구조의 응답에서 items 배열 추출 */
 function extractItems(json) {
   if (!json) return [];
-  // 표준 패턴: response.body.items.item
-  const byStd = json?.response?.body?.items?.item;
-  if (Array.isArray(byStd)) return byStd;
-  if (byStd) return [byStd];
-  // 그 외 패턴
+  if (json?.response?.body?.items?.item) return [].concat(json.response.body.items.item);
   if (Array.isArray(json.items)) return json.items;
   if (Array.isArray(json.data)) return json.data;
+  if (Array.isArray(json)) return json;
   return [];
 }
 
